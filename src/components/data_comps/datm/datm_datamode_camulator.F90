@@ -169,6 +169,9 @@ CONTAINS
     real(R8), allocatable :: local_qbot(:), local_pbot(:)
     real(R8), allocatable :: local_fsds(:), local_fsus(:), local_flds(:), local_flus(:), local_prect(:)
     real(R8)  :: rain_kg, snow_kg, swdn, dens
+    ! CAM6 L32 bottom-level midpoint b-coefficient (hyam=0 -> p_mid = hybm*PS)
+    real(R8), parameter :: hybm_bot = 0.992556_R8
+    real(R8), parameter :: kappa    = 287.04_R8/1004.64_R8   ! Rd/cp, same as CAM cappa
     logical   :: flag_exists
     integer(IN) :: poll_iter
     character(*), parameter :: subname = '(datm_datamode_camulator_run) '
@@ -449,7 +452,10 @@ CONTAINS
 
        !--- temperature [K] ---
        a2x%rAttr(ktbot, n) = local_tbot(n)
-       a2x%rAttr(kptem, n) = local_tbot(n)   ! potential temp ≈ tbot at surface
+       
+       !--- potential temperature referenced to surface pressure (CAM: T*(PS/pmid)^kappa) ---
+       !    bottom level is pure sigma, so PS/pmid = 1/hybm_bot  ->  theta = T*1.00214
+       a2x%rAttr(kptem, n) = local_tbot(n) * (1.0_R8/hybm_bot)**kappa
 
        !--- specific humidity [kg kg-1] ---
        a2x%rAttr(kshum, n) = local_qbot(n)
