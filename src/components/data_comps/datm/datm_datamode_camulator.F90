@@ -168,7 +168,7 @@ CONTAINS
     real(R8), allocatable :: local_u10(:), local_v10(:), local_tbot(:), local_zbot(:)
     real(R8), allocatable :: local_qbot(:), local_pbot(:)
     real(R8), allocatable :: local_fsds(:), local_fsus(:), local_flds(:), local_flus(:), local_prect(:)
-    real(R8)  :: rain_kg, snow_kg, swdn, dens
+    real(R8)  :: rain_kg, snow_kg, swdn, dens, pmid
     ! CAM6 L32 bottom-level midpoint b-coefficient (hyam=0 -> p_mid = hybm*PS)
     real(R8), parameter :: hybm_bot = 0.992556_R8
     real(R8), parameter :: kappa    = 287.04_R8/1004.64_R8   ! Rd/cp, same as CAM cappa
@@ -464,9 +464,11 @@ CONTAINS
        a2x%rAttr(kpbot, n) = local_pbot(n)
        a2x%rAttr(kpslv, n) = local_pbot(n)
 
-       !--- air density from ideal gas law: rho = p / (Rd * Tv)
+       !--- air density at the bottom-level midpoint: rho = p_mid / (Rd * Tv)
+       !    local_pbot is PS; bottom level is pure sigma, so p_mid = hybm_bot*PS
        !    Tv = T * (1 + 0.608*q) (virtual temperature)
-       dens = local_pbot(n) / (287.04_R8 * local_tbot(n) * (1.0_R8 + 0.608_R8*local_qbot(n)))
+       pmid = hybm_bot * local_pbot(n)
+       dens = pmid / (287.04_R8 * local_tbot(n) * (1.0_R8 + 0.608_R8*local_qbot(n)))
        a2x%rAttr(kdens, n) = dens
 
        !--- downward longwave [W m-2] ---
